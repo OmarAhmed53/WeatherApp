@@ -93,6 +93,3 @@ fun ForecastRow(forecast: DayForecast) {
     }
 }
 
-
-
-

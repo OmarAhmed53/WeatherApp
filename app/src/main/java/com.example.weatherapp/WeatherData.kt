@@ -3,54 +3,54 @@ package com.example.weatherapp
 import com.squareup.moshi.Json
 import java.util.Date
 
-data class Temperature(
-    val date: Double,
-    val low: Double,
-    val high: Double
-)
-
-data class WeatherCondition(
-    val icon: String,
+data class City(
+    val id: Long = 5037649,
+    val name: String = "St. Paul",
+    val zipCode: String = "55101",
+    val country: String = "US",
+    val population: Long = 307695,
+    val timezone: Int = -18000
 )
 
 data class WeatherData(
-    val conditionDescription: String,
-    private val temperature: Temperature,
-    @Json(name= "weather")
-    private val weatherConditions: List<WeatherCondition>,
-) {
-    val highTemp: Double
-        get() = temperature.high
+    val city: City = City(),
+    val cnt: Int?,
+    @Json(name = "list")
+    val forecasts: List<ForecastItem>,
+)
 
-    val lowTemp: Double
-        get() = temperature.low
+data class Temperature(
+    val day: Double?,
+    val min: Double?,
+    val max: Double?,
+)
 
-    val iconUrl: String
-        get() = "https://openweathermap.org/img/wn/${weatherConditions.firstOrNull()?.icon}@2x.png"
-}
+data class WeatherCondition(
+    val icon: String
+)
 
 data class ForecastItem(
+    val dt: Long?,
+    val sunrise: Long?,
+    val sunset: Long?,
+    val temp: Temperature?,
+    @Json(name = "feels_like")
+    val feelsLike: Temperature?,
+    val pressure: Double?,
+    val humidity: Double?,
     @Json(name = "weather")
     val weatherConditions: List<WeatherCondition>,
-    val dt: Long, // Assuming the date is given as a Unix timestamp
-    val temp: Temperature, // Assuming the temperatures are given in a "temp" object
-    val sunrise: Long, // Assuming the sunrise time is given as a Unix timestamp
-    val sunset: Long // Assuming the sunset time is given as a Unix timestamp
 ) {
     val iconUrl: String
         get() = "https://openweathermap.org/img/wn/${weatherConditions.firstOrNull()?.icon}@2x.png"
 
-    // Convert Unix timestamps to Date objects for convenience
-    val date: Date
-        get() = Date(dt * 1000L)
-    val sunriseTime: Date
-        get() = Date(sunrise * 1000L)
-    val sunsetTime: Date
-        get() = Date(sunset * 1000L)
+    val date: Date?
+        get() = dt?.let { Date(it * 1000L) }
+    val sunriseTime: Date?
+        get() = sunrise?.let { Date(it * 1000L) }  // null check
+    val sunsetTime: Date?
+        get() = sunset?.let { Date(it * 1000L) }  // null check
 }
 
-data class Forecast(
 
-    @Json(name = "list")
-    val forecasts: List<ForecastItem>
-)
+

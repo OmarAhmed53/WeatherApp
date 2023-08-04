@@ -23,20 +23,17 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun ForecastScreen() {
+fun ForecastScreen(zipCode: String) {
     val forecastViewModel: ForecastViewModel = hiltViewModel()
     val forecastState by forecastViewModel.forecastState.observeAsState()
     val safeForecastState = forecastState ?: ForecastViewModel.ForecastState.Loading
-    val zipCode = "55101"
-    val cnt = 5 // Count of Items
+    val cnt = 5
 
-    // Trigger the getForecastData() function
     LaunchedEffect(forecastViewModel) {
         forecastViewModel.getForecastData(zipCode, cnt)
     }
 
     Column {
-        // Title bar
         Box(modifier = Modifier.fillMaxWidth().height(56.dp).background(Color.Gray)) {
             Text("Forecast", modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp), fontSize = 24.sp)
         }
@@ -50,7 +47,6 @@ fun ForecastScreen() {
                 val forecastData = (safeForecastState as ForecastViewModel.ForecastState.Success).forecastData
                 val forecastItems = forecastData.forecasts
 
-                // Display forecast items in a LazyColumn
                 LazyColumn {
                     items(forecastItems) { forecastItem ->
                         ForecastRow(forecastItem)

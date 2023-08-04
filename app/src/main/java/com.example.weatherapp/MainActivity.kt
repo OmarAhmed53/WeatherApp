@@ -9,6 +9,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -27,6 +31,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TextField
+import androidx.compose.ui.graphics.RectangleShape
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -39,22 +46,27 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(navController = navController, startDestination = "weather") {
                     composable("weather") { WeatherInfo(navController) }
-                    composable("forecast") { ForecastScreen() }
+                    composable("forecast/{zipCode}") { backStackEntry ->
+                        ForecastScreen(backStackEntry.arguments?.getString("zipCode") ?: "55101")
+                    }
                 }
             }
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun WeatherInfo(navController: NavController) {
         val currentConditionsViewModel: CurrentConditionsViewModel = hiltViewModel()
         val weatherState by currentConditionsViewModel.weatherState.observeAsState()
         val safeWeatherState = weatherState ?: CurrentConditionsViewModel.WeatherState.Loading
 
-        // Define your actual coordinates
         val zipCode = "55101"
 
-        // Trigger the getWeatherData() function
+        val isValidInput by currentConditionsViewModel.isValidInput.observeAsState(true)
+        val inputZipCode by currentConditionsViewModel.inputZipCode.observeAsState("")
+        val showDialog = remember { mutableStateOf(false) }
+
         LaunchedEffect(currentConditionsViewModel) {
             currentConditionsViewModel.getCurrentData(zipCode)
         }
@@ -86,7 +98,7 @@ class MainActivity : ComponentActivity() {
                             .fillMaxWidth()
                             .height(60.dp)
                             .background(Color.LightGray),
-                        contentAlignment = Alignment.CenterStart // Aligns the title to the left
+                        contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
                             text = stringResource(id = R.string.title),
@@ -97,7 +109,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))  // Reduced space
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -106,7 +118,7 @@ class MainActivity : ComponentActivity() {
                         Text(text = location, fontSize = 20.sp, textAlign = TextAlign.Center)
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))  // Reduced space
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -131,7 +143,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))  // Reduced space
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -151,10 +163,73 @@ class MainActivity : ComponentActivity() {
                     }
 
                     Button(
-                        onClick = { navController.navigate("forecast") },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                        onClick = {
+                            val zip = if (currentConditionsViewModel.inputZipCode.value.isNullOrBlank()) {
+                                zipCode
+                            } else {
+                                currentConditionsViewModel.inputZipCode.value
+                            }
+                            navController.navigate("forecast/$zip")
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                        modifier = Modifier
+                            .width(200.dp)
+                            .height(60.dp),
+                        shape = RectangleShape
                     ) {
                         Text("Forecast", fontSize = 20.sp, color = Color.White)
+                    }
+
+                    TextField(
+                        value = inputZipCode,
+                        onValueChange = { newValue -> currentConditionsViewModel.inputZipCode.value = newValue },
+                        label = { Text("Zip Code") },
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+
+                    Button(
+                        onClick = {
+                            currentConditionsViewModel.validateAndFetchData()
+                            if (!isValidInput) {
+                                showDialog.value = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .width(200.dp)
+                            .height(60.dp),
+                        shape = RectangleShape
+                    ) {
+                        Text("Search", fontSize = 20.sp, color = Color.White)
+                    }
+
+                    if (!isValidInput) {
+                        showDialog.value = true
+                    }
+
+                    if (showDialog.value) {
+                        AlertDialog(
+                            onDismissRequest = {
+                                showDialog.value = false
+                            },
+                            title = {
+                                Text(text = "Error")
+                            },
+                            text = {
+                                Text("Invalid Zip Code!")
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showDialog.value = false
+                                        currentConditionsViewModel.resetValidationFlag()
+                                    }
+                                ) {
+                                    Text("OK")
+                                }
+                            }
+                        )
                     }
                 }
 

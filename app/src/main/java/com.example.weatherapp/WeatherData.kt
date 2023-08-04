@@ -47,9 +47,9 @@ data class ForecastItem(
     val date: Date?
         get() = dt?.let { Date(it * 1000L) }
     val sunriseTime: Date?
-        get() = sunrise?.let { Date(it * 1000L) }  // null check
+        get() = sunrise?.let { Date(it * 1000L) }
     val sunsetTime: Date?
-        get() = sunset?.let { Date(it * 1000L) }  // null check
+        get() = sunset?.let { Date(it * 1000L) }
 }
 
 

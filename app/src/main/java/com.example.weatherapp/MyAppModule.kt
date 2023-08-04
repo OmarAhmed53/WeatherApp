@@ -1,6 +1,5 @@
 package com.example.weatherapp
 
-import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -33,14 +32,4 @@ object MyAppModule {
     fun provideApiService(retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
     }
-
-//    @Provides
-//    fun provideCurrentConditionsViewModel(apiService: ApiService): CurrentConditionsViewModel {
-//        return CurrentConditionsViewModel(apiService)
-//    }
-//
-//    @Provides
-//    fun provideForecastViewModel(apiService: ApiService): ForecastViewModel {
-//        return ForecastViewModel(apiService)
-//    }
 }
